@@ -14,10 +14,12 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("password", password);
-    dispatch(login(formData));
+   const userData = {
+  email,
+  password,
+};
+dispatch(login(userData));
+
   };
 
   useEffect(() => {
