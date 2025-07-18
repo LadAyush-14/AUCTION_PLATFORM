@@ -41,7 +41,7 @@ export const register = catchAsyncErrors(async (req, res, next) => {
     }
     if (!gpayNumber) {
       return next(
-        new ErrorHandler("Please provide your easypaisa account number.", 400)
+        new ErrorHandler("Please provide your gpay account number.", 400)
       );
     }
     if (!paypalEmail) {
@@ -133,10 +133,13 @@ export const logout = catchAsyncErrors(async (req, res, next) => {
 });
 
 export const fetchLeaderboard = catchAsyncErrors(async (req, res, next) => {
-  const users = await User.find({ moneySpent: { $gt: 0 } });
-  const leaderboard = users.sort((a, b) => b.moneySpent - a.moneySpent);
+  const leaderboard = await User.find({ moneySpent: { $gt: 0 } })
+    .sort({ moneySpent: -1 })
+    .limit(10);
+
   res.status(200).json({
     success: true,
     leaderboard,
   });
 });
+

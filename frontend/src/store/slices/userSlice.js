@@ -11,7 +11,7 @@ const userSlice = createSlice({
     leaderboard: [],
   },
   reducers: {
-    registerRequest(state, action) {
+    registerRequest(state) {
       state.loading = true;
       state.isAuthenticated = false;
       state.user = {};
@@ -21,12 +21,12 @@ const userSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload.user;
     },
-    registerFailed(state, action) {
+    registerFailed(state) {
       state.loading = false;
       state.isAuthenticated = false;
       state.user = {};
     },
-    loginRequest(state, action) {
+    loginRequest(state) {
       state.loading = true;
       state.isAuthenticated = false;
       state.user = {};
@@ -36,37 +36,32 @@ const userSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload.user;
     },
-    loginFailed(state, action) {
+    loginFailed(state) {
       state.loading = false;
       state.isAuthenticated = false;
       state.user = {};
     },
-    fetchUserRequest(state, action) {
+    fetchUserRequest(state) {
       state.loading = true;
-      state.isAuthenticated = false;
-      state.user = {};
     },
     fetchUserSuccess(state, action) {
       state.loading = false;
       state.isAuthenticated = true;
       state.user = action.payload;
     },
-    fetchUserFailed(state, action) {
+    fetchUserFailed(state) {
       state.loading = false;
       state.isAuthenticated = false;
       state.user = {};
     },
-
-    logoutSuccess(state, action) {
+    logoutSuccess(state) {
       state.isAuthenticated = false;
       state.user = {};
     },
-    logoutFailed(state, action) {
+    logoutFailed(state) {
       state.loading = false;
-      state.isAuthenticated = state.isAuthenticated;
-      state.user = state.user;
     },
-    fetchLeaderboardRequest(state, action) {
+    fetchLeaderboardRequest(state) {
       state.loading = true;
       state.leaderboard = [];
     },
@@ -74,18 +69,17 @@ const userSlice = createSlice({
       state.loading = false;
       state.leaderboard = action.payload;
     },
-    fetchLeaderboardFailed(state, action) {
+    fetchLeaderboardFailed(state) {
       state.loading = false;
       state.leaderboard = [];
     },
-    clearAllErrors(state, action) {
-      state.user = state.user;
-      state.isAuthenticated = state.isAuthenticated;
-      state.leaderboard = state.leaderboard;
+    clearAllErrors(state) {
       state.loading = false;
     },
   },
 });
+
+// ✅ ACTIONS
 
 export const register = (data) => async (dispatch) => {
   dispatch(userSlice.actions.registerRequest());
@@ -103,7 +97,7 @@ export const register = (data) => async (dispatch) => {
     dispatch(userSlice.actions.clearAllErrors());
   } catch (error) {
     dispatch(userSlice.actions.registerFailed());
-    toast.error(error.response.data.message);
+    toast.error(error?.response?.data?.message || "Registration failed.");
     dispatch(userSlice.actions.clearAllErrors());
   }
 };
@@ -124,7 +118,7 @@ export const login = (data) => async (dispatch) => {
     dispatch(userSlice.actions.clearAllErrors());
   } catch (error) {
     dispatch(userSlice.actions.loginFailed());
-    toast.error(error.response.data.message);
+    toast.error(error?.response?.data?.message || "Login failed.");
     dispatch(userSlice.actions.clearAllErrors());
   }
 };
@@ -140,7 +134,7 @@ export const logout = () => async (dispatch) => {
     dispatch(userSlice.actions.clearAllErrors());
   } catch (error) {
     dispatch(userSlice.actions.logoutFailed());
-    toast.error(error.response.data.message);
+    toast.error(error?.response?.data?.message || "Logout failed.");
     dispatch(userSlice.actions.clearAllErrors());
   }
 };
@@ -156,7 +150,7 @@ export const fetchUser = () => async (dispatch) => {
   } catch (error) {
     dispatch(userSlice.actions.fetchUserFailed());
     dispatch(userSlice.actions.clearAllErrors());
-    console.error(error);
+    console.error("Fetch user error:", error);
   }
 };
 
@@ -176,7 +170,7 @@ export const fetchLeaderboard = () => async (dispatch) => {
   } catch (error) {
     dispatch(userSlice.actions.fetchLeaderboardFailed());
     dispatch(userSlice.actions.clearAllErrors());
-    console.error(error);
+    console.error("Leaderboard fetch error:", error);
   }
 };
 

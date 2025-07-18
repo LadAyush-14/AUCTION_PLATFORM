@@ -142,13 +142,14 @@ const UserProfile = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Easypaisa Account Number
+                       Gpay Account Number
                       </label>
                       <input
                         type="text"
-                        defaultValue={
-                          user.paymentMethods.easypaisa.gpayNumber
-                        }
+                      
+                         defaultValue={user.paymentMethods.gpay.gpayNumber || "Not Provided"}
+
+                        
                         className="w-ful mt-1 p-2 border-gray-300 rounded-md focus:outline-none"
                         disabled
                       />

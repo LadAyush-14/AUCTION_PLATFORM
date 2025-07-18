@@ -1,22 +1,22 @@
+import jwt from "jsonwebtoken";
+
 export const generateToken = (user, message, statusCode, res) => {
-  const token = user.generateJsonWebToken();
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
+     expiresIn: process.env.JWT_EXPIRE,
+  });
 
   res
     .status(statusCode)
     .cookie("token", token, {
-       httpOnly: true,
-      secure:  process.env.NODE_ENV === "production",            
-      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-      expires: new Date(
-        Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-      ),
-            
+      httpOnly: true,
+      secure: false,            
+      sameSite: "Lax",          
+      path: "/",                
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
     })
     .json({
       success: true,
       message,
       user,
-      token,
     });
 };
-

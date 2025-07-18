@@ -12,7 +12,6 @@ export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
   }
 
   const { image } = req.files;
-
   const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
   if (!allowedFormats.includes(image.mimetype)) {
     return next(new ErrorHandler("File format not supported.", 400));
@@ -27,6 +26,7 @@ export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
     startTime,
     endTime,
   } = req.body;
+
   if (
     !title ||
     !description ||
@@ -38,69 +38,59 @@ export const addNewAuctionItem = catchAsyncErrors(async (req, res, next) => {
   ) {
     return next(new ErrorHandler("Please provide all details.", 400));
   }
+
   if (new Date(startTime) < Date.now()) {
     return next(
-      new ErrorHandler(
-        "Auction starting time must be greater than present time.",
-        400
-      )
+      new ErrorHandler("Auction starting time must be greater than present time.", 400)
     );
   }
+
   if (new Date(startTime) >= new Date(endTime)) {
-    return next(
-      new ErrorHandler(
-        "Auction starting time must be less than ending time.",
-        400
-      )
-    );
+    return next(new ErrorHandler("Auction starting time must be less than ending time.", 400));
   }
+
   const alreadyOneAuctionActive = await Auction.find({
     createdBy: req.user._id,
     endTime: { $gt: Date.now() },
   });
+
   if (alreadyOneAuctionActive.length > 0) {
     return next(new ErrorHandler("You already have one active auction.", 400));
   }
-  try {
-    const cloudinaryResponse = await cloudinary.uploader.upload(
-      image.tempFilePath,
-      {
-        folder: "MERN_AUCTION_PLATFORM_AUCTIONS",
-      }
-    );
-    if (!cloudinaryResponse || cloudinaryResponse.error) {
-      console.error(
-        "Cloudinary error:",
-        cloudinaryResponse.error || "Unknown cloudinary error."
-      );
-      return next(
-        new ErrorHandler("Failed to upload auction image to cloudinary.", 500)
-      );
+
+  const cloudinaryResponse = await cloudinary.uploader.upload(
+    image.tempFilePath,
+    {
+      folder: "MERN_AUCTION_PLATFORM_AUCTIONS",
     }
-    const auctionItem = await Auction.create({
-      title,
-      description,
-      category,
-      condition,
-      startingBid,
-      startTime,
-      endTime,
-      image: {
-        public_id: cloudinaryResponse.public_id,
-        url: cloudinaryResponse.secure_url,
-      },
-      createdBy: req.user._id,
-    });
-    return res.status(201).json({
-      success: true,
-      message: `Auction item created and will be listed on auction page at ${startTime}`,
-      auctionItem,
-    });
-  } catch (error) {
+  );
+
+  if (!cloudinaryResponse || cloudinaryResponse.error) {
     return next(
-      new ErrorHandler(error.message || "Failed to created auction.", 500)
+      new ErrorHandler("Failed to upload auction image to cloudinary.", 500)
     );
   }
+
+  const auctionItem = await Auction.create({
+    title,
+    description,
+    category,
+    condition,
+    startingBid,
+    startTime: new Date(startTime),
+    endTime: new Date(endTime),
+    image: {
+      public_id: cloudinaryResponse.public_id,
+      url: cloudinaryResponse.secure_url,
+    },
+    createdBy: req.user._id,
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: `Auction item created and will be listed on auction page at ${startTime}`,
+    auctionItem,
+  });
 });
 
 export const getAllItems = catchAsyncErrors(async (req, res, next) => {
@@ -157,38 +147,36 @@ export const republishItem = catchAsyncErrors(async (req, res, next) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return next(new ErrorHandler("Invalid Id format.", 400));
   }
+
   let auctionItem = await Auction.findById(id);
   if (!auctionItem) {
     return next(new ErrorHandler("Auction not found.", 404));
   }
+
   if (!req.body.startTime || !req.body.endTime) {
-    return next(
-      new ErrorHandler("Starttime and Endtime for republish is mandatory.")
-    );
+    return next(new ErrorHandler("Starttime and Endtime for republish is mandatory."));
   }
+
   if (new Date(auctionItem.endTime) > Date.now()) {
     return next(
       new ErrorHandler("Auction is already active, cannot republish", 400)
     );
   }
+
   let data = {
     startTime: new Date(req.body.startTime),
     endTime: new Date(req.body.endTime),
   };
+
   if (data.startTime < Date.now()) {
     return next(
-      new ErrorHandler(
-        "Auction starting time must be greater than present time",
-        400
-      )
+      new ErrorHandler("Auction starting time must be greater than present time", 400)
     );
   }
+
   if (data.startTime >= data.endTime) {
     return next(
-      new ErrorHandler(
-        "Auction starting time must be less than ending time.",
-        400
-      )
+      new ErrorHandler("Auction starting time must be less than ending time.", 400)
     );
   }
 
@@ -203,12 +191,15 @@ export const republishItem = catchAsyncErrors(async (req, res, next) => {
   data.commissionCalculated = false;
   data.currentBid = 0;
   data.highestBidder = null;
+
   auctionItem = await Auction.findByIdAndUpdate(id, data, {
     new: true,
     runValidators: true,
     useFindAndModify: false,
   });
+
   await Bid.deleteMany({ auctionItem: auctionItem._id });
+
   const createdBy = await User.findByIdAndUpdate(
     req.user._id,
     { unpaidCommission: 0 },
@@ -218,6 +209,7 @@ export const republishItem = catchAsyncErrors(async (req, res, next) => {
       useFindAndModify: false,
     }
   );
+
   res.status(200).json({
     success: true,
     auctionItem,

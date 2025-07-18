@@ -36,7 +36,7 @@ const SignUp = () => {
       (formData.append("bankAccountName", bankAccountName),
       formData.append("bankAccountNumber", bankAccountNumber),
       formData.append("bankName", bankName),
-      formData.append("easypaisaAccountNumbe", gpayNumber),
+      formData.append("gpayNumber", gpayNumber),
       formData.append("paypalEmail", paypalEmail));
     dispatch(register(formData));
   };
